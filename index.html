@@ -199,10 +199,6 @@
                 this.x += Math.sin(bearing) * speed * dt;
                 this.y -= Math.cos(bearing) * speed * dt;
             }
-
-            this.colour.update(
-                this.colour.hue + 60 * dt, this.colour.sat, this.colour.val
-            );
         }
 
         this.draw = function() {
@@ -290,10 +286,21 @@
         }
     );
 
+    // Modulate blob hue
+    var hueLFO = new LFO(0, 360, 120, function(value) {
+        for (var i in blobs) {
+            var colour = blobs[i].colour;
+            blobs[i].colour.update(
+                value, colour.sat, colour.val
+            );
+        }
+    }, true);
+
     function mainUpdate(dt) {
         if (KEY_NAMES.wavy in pressedKeys) {
             bearingShiftLFO.update(dt);
         }
+        hueLFO.update(dt);
 
         for (var i in blobs) {
             blobs[i].update(dt);
