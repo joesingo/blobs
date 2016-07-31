@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <style type="text/css">
+        #main-canvas {
+            display: block;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="main-canvas"></canvas>
+    <script type="text/javascript">
+
+    /** FROM: https://gist.github.com/eyecatchup/9536706
+    * HSV to RGB color conversion
+    *
+    * H runs from 0 to 360 degrees
+    * S and V run from 0 to 100
+    *
+    * Ported from the excellent java algorithm by Eugene Vishnevsky at:
+    * http://www.cs.rit.edu/~ncs/color/t_convert.html
+    */
+    function hsvToRgb(h, s, v) {
+        var r, g, b;
+        var i;
+        var f, p, q, t;
+
+        // Make sure our arguments stay in-range
+        h = Math.max(0, Math.min(360, h));
+        s = Math.max(0, Math.min(100, s));
+        v = Math.max(0, Math.min(100, v));
+
+        // We accept saturation and value arguments from 0 to 100 because that's
+        // how Photoshop represents those values. Internally, however, the
+        // saturation and value are calculated from a range of 0 to 1. We make
+        // That conversion here.
+        s /= 100;
+        v /= 100;
+
+        if(s == 0) {
+            // Achromatic (grey)
+            r = g = b = v;
+            return [
+                Math.round(r * 255),
+                Math.round(g * 255),
+                Math.round(b * 255)
+            ];
+        }
+
+        h /= 60; // sector 0 to 5
+        i = Math.floor(h);
+        f = h - i; // factorial part of h
+        p = v * (1 - s);
+        q = v * (1 - s * f);
+        t = v * (1 - s * (1 - f));
+
+        switch(i) {
+            case 0:
+                r = v;
+                g = t;
+                b = p;
+                break;
+
+            case 1:
+                r = q;
+                g = v;
+                b = p;
+                break;
+
+            case 2:
+                r = p;
+                g = v;
+                b = t;
+                break;
+
+            case 3:
+                r = p;
+                g = q;
+                b = v;
+                break;
+
+            case 4:
+                r = t;
+                g = p;
+                b = v;
+                break;
+
+            default: // case 5:
+                r = v;
+                g = p;
+                b = q;
+        }
+
+        return [
+            Math.round(r * 255),
+            Math.round(g * 255),
+            Math.round(b * 255)
+        ];
+    }
+
+    /**
+     * An object to represent an LFO
+     *
+     * minValue - The minimum value to set
+     * maxValue - The maximum value to set
+     * speed - The amount to increase the value by in 1 second
+     * callback - A function that takes a Blob object and the value to be set
+               as parameters
+     */
+    function LFO(minValue, maxValue, speed, callback) {
+        var value = (minValue + maxValue) / 2;
+
+        // The 'direction' to modulate the value. +1 for up (i.e. value
+        // increases) and -1 for down
+        var direction = 1;
+
+        this.update = function(dt) {
+            var change = speed * dt;
+            value += change * direction;
+
+            // Make sure the value has not gone out of range
+            if (value > maxValue) {
+                // Change direction
+                direction *= -1;
+                // Work out how far past the max value we have gone, and set
+                // the value to the proper value
+                var extra = value - maxValue;
+                value = maxValue - extra;
+            }
+            // (Same as above but for min value)
+            if (value < minValue) {
+                direction *= -1;
+                var extra = minValue - value;
+                value = minValue + extra;
+            }
+
+            callback(value);
+        }
+
+    }
+
+    function Colour(h, s, v) {
+
+        /**
+         * Update this colour's HSV value and convert it to RGB
+         */
+        this.update = function(h, s, v) {
+            this.hue = h % 360;
+            this.sat = s;
+            this.val = v;
+
+            var rgb = hsvToRgb(this.hue, this.sat, this.val);
+            this.rbgString = "rgb(" + rgb.join(",") + ")";
+        }
+
+        this.update(h, s, v);
+    }
+
+    /**
+     * A blob object
+     * x - x-coordinate
+     * y - y-coordinate
+     * bearing - Bearing from north in radians
+     * color - A Colour object representing the colour of this blob
+     */
+    function Blob(x, y, bearing, colour) {
+        this.x = x;
+        this.y = y;
+        this.bearing = bearing;
+        this.colour = colour;
+
+        this.bearingShift = 0;
+
+        this.update = function(dt) {
+            // Move this blob if the pause key is not down
+            if (!(KEY_NAMES.pause in pressedKeys)) {
+                var speed = KEY_NAMES.slow in pressedKeys ?
+                            settings.blob.slowSpeed : settings.blob.speed;
+
+                var bearing = this.bearing + this.bearingShift;
+
+                this.x += Math.sin(bearing) * speed * dt;
+                this.y -= Math.cos(bearing) * speed * dt;
+            }
+
+            this.colour.update(
+                this.colour.hue + 60 * dt, this.colour.sat, this.colour.val
+            );
+        }
+
+        this.draw = function() {
+            ctx.fillStyle = this.colour.rbgString;
+            ctx.beginPath();
+            ctx.arc(
+                this.x, this.y, settings.blob.radius, 0, 2 * Math.PI
+            );
+            ctx.fill();
+        }
+    }
+
+    /**
+      * Adjust the bearing of each Blob in 'blobs' to head towards the point
+      * (x, y)
+      */
+    function attractBlobs(blobs, x, y) {
+        for (var i in blobs) {
+            var dx = x - blobs[i].x;
+            var dy = -(y - blobs[i].y);
+            blobs[i].bearing = Math.atan2(dx, dy);
+        }
+    }
+
+    function moveBlobs(blobs, x, y) {
+        for (var i in blobs) {
+            blobs[i].x = x;
+            blobs[i].y = y;
+        }
+    }
+
+    function handleClick(x, y) {
+        if (KEY_NAMES.pause in pressedKeys) {
+            moveBlobs(blobs, x, y);
+        }
+        else {
+            attractBlobs(blobs, x, y);
+        }
+    }
+
+    var settings = {
+        "canvas": {
+            "width": 930,
+            "height": 600,
+            "backgroundColour": new Colour(0, 0, 0)
+        },
+        "blob": {
+            "radius": 3,
+            "count": 1800,
+            "speed": 100,
+            "slowSpeed": 50
+        }
+    };
+
+    var canvas = document.getElementById("main-canvas");
+    canvas.width = settings.canvas.width;
+    canvas.height = settings.canvas.height;
+    var ctx = canvas.getContext("2d");
+
+    // Draw border
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+    var blobs = [];
+    for (var i=0; i<settings.blob.count; i++) {
+        var x = Math.random() * canvas.width;
+        var y = Math.random() * canvas.height;
+        var bearing = Math.random() * 2 * Math.PI;
+
+        var hue = 120;
+        var sat = Math.random() * 100;
+        var val = Math.random() * 100;
+        var colour = new Colour(hue, sat, val);
+
+        blobs.push(new Blob(x, y, bearing, colour));
+    }
+
+    // Modulate blob bearing
+    var bearingShiftLFO = new LFO(-Math.PI/4, Math.PI/4, 1,
+        function(value) {
+            console.log(2);
+            for (var i in blobs) {
+                blobs[i].bearingShift = value;
+            }
+        }
+    );
+
+    function mainUpdate(dt) {
+        if (KEY_NAMES.wavy in pressedKeys) {
+            bearingShiftLFO.update(dt);
+        }
+
+        for (var i in blobs) {
+            blobs[i].update(dt);
+        }
+
+        draw();
+    }
+
+    function draw() {
+        // Clear screen
+        ctx.fillStyle = settings.canvas.backgroundColour.rbgString;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Draw border
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        for (var i in blobs) {
+            blobs[i].draw();
+        }
+    }
+
+    var stopped = false;
+
+    var then = Date.now();
+    setInterval(function() {
+        if (!stopped) {
+            var now = Date.now();
+            var dt = (now - then) / 1000;
+            then = now;
+            mainUpdate(dt);
+        }
+    }, 1);
+
+    canvas.addEventListener("click", function(event) {
+        var x = event.offsetX;
+        var y = event.offsetY;
+        handleClick(x, y);
+    });
+
+    var KEY_NAMES = {
+        "pause": 16, // Shift
+        "randomise": 82, // r
+        "center": 67, // c
+        "slow": 83, // s
+        "wavy": 87, // w
+    }
+    var pressedKeys = {};
+    window.addEventListener("keydown", function(event) {
+        console.log(event.keyCode);
+
+        pressedKeys[event.keyCode] = true;
+
+        switch (event.keyCode) {
+            // Randomise the bearing of all blobs
+            case KEY_NAMES.randomise:
+                for (var i in blobs) {
+                    blobs[i].bearing = Math.random() * 2 * Math.PI;
+                }
+                break;
+
+            // Click at the center of the canvas
+            case KEY_NAMES.center:
+                handleClick(canvas.width / 2, canvas.height / 2);
+                break;
+        }
+    });
+    window.addEventListener("keyup", function(event) {
+        delete pressedKeys[event.keyCode];
+
+        switch (event.keyCode) {
+            // Reset the bearing shift on all blobs when stopping wavy mode
+            case KEY_NAMES.wavy:
+                for (var i in blobs) {
+                    blobs[i].bearingShift = 0;
+                }
+                break;
+        }
+    });
+
+    </script>
+</body>
+
+</html>
