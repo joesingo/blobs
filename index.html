@@ -156,6 +156,9 @@
         }
     }
 
+    /**
+     * An object representing a colour as HSV
+     */
     function Colour(h, s, v) {
 
         /**
@@ -167,6 +170,8 @@
             this.val = v;
 
             var rgb = hsvToRgb(this.hue, this.sat, this.val);
+            // Store the RGB string on the object so we don't have to convert
+            // every frame
             this.rbgString = "rgb(" + rgb.join(",") + ")";
         }
 
@@ -175,6 +180,7 @@
 
     /**
      * A blob object
+     *
      * x - x-coordinate
      * y - y-coordinate
      * bearing - Bearing from north in radians
@@ -188,6 +194,9 @@
 
         this.bearingShift = 0;
 
+        /**
+         * Update this blob's position
+         */
         this.update = function(dt) {
             // Move this blob if the pause key is not down
             if (!(KEY_NAMES.pause in pressedKeys)) {
@@ -201,6 +210,9 @@
             }
         }
 
+        /**
+         * Draw this blob as a circle on the canvas
+         */
         this.draw = function() {
             ctx.fillStyle = this.colour.rbgString;
             ctx.beginPath();
@@ -212,7 +224,7 @@
     }
 
     /**
-      * Adjust the bearing of each Blob in 'blobs' to head towards the point
+      * Adjust the bearing of each blob in the array to head towards the point
       * (x, y)
       */
     function attractBlobs(blobs, x, y) {
@@ -223,6 +235,9 @@
         }
     }
 
+    /**
+     * Move every blob in the array to the point (x, y)
+     */
     function moveBlobs(blobs, x, y) {
         for (var i in blobs) {
             blobs[i].x = x;
@@ -230,6 +245,10 @@
         }
     }
 
+    /**
+     * Move all blobs to the point if paused, otherwise make them head towards
+     * the point
+     */
     function handleClick(x, y) {
         if (KEY_NAMES.pause in pressedKeys) {
             moveBlobs(blobs, x, y);
@@ -239,15 +258,16 @@
         }
     }
 
+    // User customisable settings
     var settings = {
         "canvas": {
             "width": 930,
             "height": 600,
-            "backgroundColour": new Colour(0, 0, 0)
+            "backgroundColour": "black"
         },
         "blob": {
             "radius": 3,
-            "count": 1800,
+            "count": 2400,
             "speed": 100,
             "slowSpeed": 50
         }
@@ -257,11 +277,6 @@
     canvas.width = settings.canvas.width;
     canvas.height = settings.canvas.height;
     var ctx = canvas.getContext("2d");
-
-    // Draw border
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
     var blobs = [];
     for (var i=0; i<settings.blob.count; i++) {
@@ -287,7 +302,7 @@
     );
 
     // Modulate blob hue
-    var hueLFO = new LFO(0, 360, 120, function(value) {
+    var hueLFO = new LFO(0, 360, 30, function(value) {
         for (var i in blobs) {
             var colour = blobs[i].colour;
             blobs[i].colour.update(
@@ -296,6 +311,10 @@
         }
     }, true);
 
+    /**
+     * The main update loop that is called each frame
+     * dt - Time in seconds since the last frame
+     */
     function mainUpdate(dt) {
         if (KEY_NAMES.wavy in pressedKeys) {
             bearingShiftLFO.update(dt);
@@ -309,9 +328,12 @@
         draw();
     }
 
+    /**
+     * Clear the screen and draw all objects
+     */
     function draw() {
         // Clear screen
-        ctx.fillStyle = settings.canvas.backgroundColour.rbgString;
+        ctx.fillStyle = settings.canvas.backgroundColour;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         // Draw border
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
@@ -323,6 +345,7 @@
 
     var stopped = false;
 
+    // Start main loop
     var then = Date.now();
     setInterval(function() {
         if (!stopped) {
