@@ -220,6 +220,8 @@
         this.bearing = bearing;
         this.colour = colour;
 
+        // This angle is added to the bearing each frame (e.g. to be modulated
+        // by an LFO)
         this.bearingShift = 0;
 
         /**
@@ -341,6 +343,10 @@
             }
         }, true);
 
+        // lfos.speed = new LFO(100, 300, 200, function(value) {
+        //     settings.blob.speed = value;
+        // });
+
         stopped = false;
     }
 
@@ -349,10 +355,14 @@
      * dt - Time in seconds since the last frame
      */
     function mainUpdate(dt) {
-        if (KEY_NAMES.wavy in pressedKeys) {
-            lfos.bearingShift.update(dt);
+        for (var i in lfos) {
+            // Skip updating this LFO if it's bearingShift and the key is not
+            // pressed
+            if (i === "bearingShift" && !(KEY_NAMES.wavy in pressedKeys)) {
+                continue;
+            }
+            lfos[i].update(dt);
         }
-        lfos.hue.update(dt);
 
         for (var i in blobs) {
             blobs[i].update(dt);
@@ -365,9 +375,11 @@
      * Clear the screen and draw all objects
      */
     function draw() {
-        // Clear screen
-        ctx.fillStyle = settings.canvas.backgroundColour;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (settings.clearCanvas) {
+            // Clear screen
+            ctx.fillStyle = settings.canvas.backgroundColour;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
         // Draw border
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
@@ -380,6 +392,7 @@
      * Show a popup containing a textarea to edit the settings object as JSON
      */
     function showSettings() {
+        settingsDisplayed = true;
         var settingsPopup = document.getElementById("settings-popup");
         var textarea = settingsPopup.getElementsByTagName("textarea")[0];
         textarea.innerHTML = JSON.stringify(settings, null, 4);
@@ -397,6 +410,7 @@
             settings = JSON.parse(textarea.value);
             setup();
             settingsPopup.style.display = "none";
+            settingsDisplayed = false;
             // Remove error class in case there was an error before
             textarea.className = "";
         }
@@ -415,10 +429,11 @@
         },
         "blob": {
             "radius": 3,
-            "count": 2400,
+            "count": 2500,
             "speed": 100,
             "slowSpeed": 50
-        }
+        },
+        "clearCanvas": true
     };
 
     var canvas = document.getElementById("main-canvas");
@@ -453,8 +468,10 @@
         "slow": 83, // s
         "wavy": 87, // w
         "settings": 79, // o
+        "toggleClear": 75, // k
     }
     var pressedKeys = {};
+    var settingsDisplayed = false;
     window.addEventListener("keydown", function(event) {
         console.log(event.keyCode);
 
@@ -475,10 +492,13 @@
 
             // Show settings
             case KEY_NAMES.settings:
-                var settingsPopup = document.getElementById("settings-popup");
-                if (settingsPopup.style.display === "none") {
+                if (!settingsDisplayed) {
                     showSettings();
                 }
+                break;
+
+            case KEY_NAMES.toggleClear:
+                settings.clearCanvas = !settings.clearCanvas;
                 break;
         }
     });
