@@ -110,8 +110,13 @@
      * speed - The amount to increase the value by in 1 second
      * callback - A function that takes a Blob object and the value to be set
                as parameters
+     * loopRound (optional) - If this is true then jump from maxValue to
+                              minValue instead of going back down (defaults to
+                              false)
      */
-    function LFO(minValue, maxValue, speed, callback) {
+    function LFO(minValue, maxValue, speed, callback, loopRound) {
+        loopRound = loopRound || false
+
         var value = (minValue + maxValue) / 2;
 
         // The 'direction' to modulate the value. +1 for up (i.e. value
@@ -124,15 +129,24 @@
 
             // Make sure the value has not gone out of range
             if (value > maxValue) {
-                // Change direction
-                direction *= -1;
                 // Work out how far past the max value we have gone, and set
                 // the value to the proper value
                 var extra = value - maxValue;
-                value = maxValue - extra;
+
+                if (loopRound) {
+                    value = minValue + extra;
+                }
+                else {
+                    // Change direction
+                    direction *= -1;
+                    value = maxValue - extra;
+                }
             }
             // (Same as above but for min value)
             if (value < minValue) {
+                // We do not need to consider loopRound here because direction
+                // will always be 1 if loopRound is true
+
                 direction *= -1;
                 var extra = minValue - value;
                 value = minValue + extra;
@@ -140,7 +154,6 @@
 
             callback(value);
         }
-
     }
 
     function Colour(h, s, v) {
@@ -271,7 +284,6 @@
     // Modulate blob bearing
     var bearingShiftLFO = new LFO(-Math.PI/4, Math.PI/4, 1,
         function(value) {
-            console.log(2);
             for (var i in blobs) {
                 blobs[i].bearingShift = value;
             }
