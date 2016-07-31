@@ -8,10 +8,38 @@
             display: block;
             margin: auto;
         }
+        .popup {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            width: 380px;
+            margin-left: -190px;
+            padding: 20px;
+            background: white;
+            border: 1px solid gray;
+        }
+        .popup h2 {
+            margin-top: 0;
+        }
+        #settings-popup {
+            display: none;
+        }
+        #settings-popup textarea {
+            width: 100%;
+            height: 20em;
+        }
+        .error {
+            border: 1px solid red;
+        }
     </style>
 </head>
 
 <body>
+    <div class="popup" id="settings-popup">
+        <h2>Settings</h2>
+        <textarea></textarea>
+        <button onclick="saveSettings()">Save</button>
+    </div>
     <canvas id="main-canvas"></canvas>
     <script type="text/javascript">
 
@@ -258,58 +286,63 @@
         }
     }
 
-    // User customisable settings
-    var settings = {
-        "canvas": {
-            "width": 930,
-            "height": 600,
-            "backgroundColour": "black"
-        },
-        "blob": {
-            "radius": 3,
-            "count": 2400,
-            "speed": 100,
-            "slowSpeed": 50
+    /**
+     * Return an array of blobs, optionally at a specified co-ordinate
+     *
+     * count - The number of blobs to create
+     * x (optional) - The x-coordinate to create the blobs at (defaults to using a
+     *               random coordinate for each blob)
+     * y (optional) - Same as x for y-coordinate
+     */
+    function createBlobs(count, x, y) {
+        var blobs = [];
+        for (var i=0; i<count; i++) {
+            var bearing = Math.random() * 2 * Math.PI;
+
+            var hue = 120;
+            var sat = Math.random() * 100;
+            var val = Math.random() * 100;
+            var colour = new Colour(hue, sat, val);
+
+            var tx = x || Math.random() * canvas.width;
+            var ty = y || Math.random() * canvas.height;
+
+            blobs.push(new Blob(tx, ty, bearing, colour));
         }
-    };
-
-    var canvas = document.getElementById("main-canvas");
-    canvas.width = settings.canvas.width;
-    canvas.height = settings.canvas.height;
-    var ctx = canvas.getContext("2d");
-
-    var blobs = [];
-    for (var i=0; i<settings.blob.count; i++) {
-        var x = Math.random() * canvas.width;
-        var y = Math.random() * canvas.height;
-        var bearing = Math.random() * 2 * Math.PI;
-
-        var hue = 120;
-        var sat = Math.random() * 100;
-        var val = Math.random() * 100;
-        var colour = new Colour(hue, sat, val);
-
-        blobs.push(new Blob(x, y, bearing, colour));
+        return blobs;
     }
 
-    // Modulate blob bearing
-    var bearingShiftLFO = new LFO(-Math.PI/4, Math.PI/4, 1,
-        function(value) {
-            for (var i in blobs) {
-                blobs[i].bearingShift = value;
-            }
-        }
-    );
+    /**
+     * Set up the canvas, blobs and LFOs
+     */
+    function setup() {
+        canvas.width = settings.canvas.width;
+        canvas.height = settings.canvas.height;
 
-    // Modulate blob hue
-    var hueLFO = new LFO(0, 360, 30, function(value) {
-        for (var i in blobs) {
-            var colour = blobs[i].colour;
-            blobs[i].colour.update(
-                value, colour.sat, colour.val
-            );
-        }
-    }, true);
+        blobs = createBlobs(settings.blob.count);
+        lfos = {};
+
+        // Modulate blob bearing
+        lfos.bearingShift = new LFO(-Math.PI/4, Math.PI/4, 1,
+            function(value) {
+                for (var i in blobs) {
+                    blobs[i].bearingShift = value;
+                }
+            }
+        );
+
+        // Modulate blob hue
+        lfos.hue = new LFO(0, 360, 30, function(value) {
+            for (var i in blobs) {
+                var colour = blobs[i].colour;
+                blobs[i].colour.update(
+                    value, colour.sat, colour.val
+                );
+            }
+        }, true);
+
+        stopped = false;
+    }
 
     /**
      * The main update loop that is called each frame
@@ -317,9 +350,9 @@
      */
     function mainUpdate(dt) {
         if (KEY_NAMES.wavy in pressedKeys) {
-            bearingShiftLFO.update(dt);
+            lfos.bearingShift.update(dt);
         }
-        hueLFO.update(dt);
+        lfos.hue.update(dt);
 
         for (var i in blobs) {
             blobs[i].update(dt);
@@ -343,7 +376,58 @@
         }
     }
 
-    var stopped = false;
+    /**
+     * Show a popup containing a textarea to edit the settings object as JSON
+     */
+    function showSettings() {
+        var settingsPopup = document.getElementById("settings-popup");
+        var textarea = settingsPopup.getElementsByTagName("textarea")[0];
+        textarea.innerHTML = JSON.stringify(settings, null, 4);
+        settingsPopup.style.display = "block";
+    }
+
+    /**
+     * Close the settings popup and update the settings object
+     */
+    function saveSettings() {
+        var settingsPopup = document.getElementById("settings-popup");
+        var textarea = settingsPopup.getElementsByTagName("textarea")[0];
+
+        try {
+            settings = JSON.parse(textarea.value);
+            setup();
+            settingsPopup.style.display = "none";
+            // Remove error class in case there was an error before
+            textarea.className = "";
+        }
+        catch (e) {
+            // User did not enter valid JSON
+            textarea.className = "error";
+        }
+    }
+
+    // User customisable settings
+    var settings = {
+        "canvas": {
+            "width": 930,
+            "height": 600,
+            "backgroundColour": "black"
+        },
+        "blob": {
+            "radius": 3,
+            "count": 2400,
+            "speed": 100,
+            "slowSpeed": 50
+        }
+    };
+
+    var canvas = document.getElementById("main-canvas");
+    var ctx = canvas.getContext("2d");
+
+    var blobs = [];
+    var lfos = {};
+
+    var stopped = true;
 
     // Start main loop
     var then = Date.now();
@@ -363,11 +447,12 @@
     });
 
     var KEY_NAMES = {
-        "pause": 16, // Shift
+        "pause": 16, // shift
         "randomise": 82, // r
         "center": 67, // c
         "slow": 83, // s
         "wavy": 87, // w
+        "settings": 79, // o
     }
     var pressedKeys = {};
     window.addEventListener("keydown", function(event) {
@@ -387,6 +472,14 @@
             case KEY_NAMES.center:
                 handleClick(canvas.width / 2, canvas.height / 2);
                 break;
+
+            // Show settings
+            case KEY_NAMES.settings:
+                var settingsPopup = document.getElementById("settings-popup");
+                if (settingsPopup.style.display === "none") {
+                    showSettings();
+                }
+                break;
         }
     });
     window.addEventListener("keyup", function(event) {
@@ -401,6 +494,8 @@
                 break;
         }
     });
+
+    setup();
 
     </script>
 </body>
