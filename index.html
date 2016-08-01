@@ -65,6 +65,7 @@
         <h2>Settings</h2>
         <pre contenteditable="true"></pre>
         <button onclick="saveSettings()">Save</button>
+        <button style="float:right" onclick="resetSettings()">Reset</button>
     </div>
 
     <div class="popup" id="help-popup">
@@ -465,7 +466,8 @@
     }
 
     /**
-     * Close the settings popup and update the settings object
+     * Close the settings popup, update the settings object and save settings to
+     * local storage
      */
     function saveSettings() {
         var elem = dialogs.settings.getElementsByTagName("pre")[0];
@@ -479,10 +481,23 @@
             return;
         }
 
+        // Save settings in local storage
+        localStorage.setItem("settings", JSON.stringify(settings));
+
         setup();
         // Remove error class in case there was an error before
         elem.className = "";
         hideDialog();
+    }
+
+    /**
+     * Reset settings to the defaults and remove from local storage
+     */
+    function resetSettings() {
+        var elem = dialogs.settings.getElementsByTagName("pre")[0];
+        elem.textContent = JSON.stringify(defaultSettings);
+        saveSettings();
+        localStorage.removeItem("settings");
     }
 
     /**
@@ -500,7 +515,7 @@
     }
 
     // User customisable settings
-    var settings = {
+    var defaultSettings = {
         "canvas": {
             "width": 930,
             "height": 600,
@@ -515,6 +530,14 @@
         "clearCanvas": true,
         "symmetry": true
     };
+
+    // Use the default settings if local storage doesn't contain settings
+    if (!localStorage.getItem("settings")) {
+        localStorage.setItem(
+            "settings", JSON.stringify(defaultSettings)
+        );
+    }
+    var settings = JSON.parse(localStorage.getItem("settings"));
 
     /**
      * Show the help dialog if it is currently hidden, and close it if it is
