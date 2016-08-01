@@ -63,7 +63,7 @@
 <body>
     <div class="popup" id="settings-popup">
         <h2>Settings</h2>
-        <textarea></textarea>
+        <pre contenteditable="true"></pre>
         <button onclick="saveSettings()">Save</button>
     </div>
 
@@ -421,37 +421,55 @@
     }
 
     /**
+     * Show the provided dialog and update displayedDialog
+     */
+    function showDialog(d) {
+        d.style.display = "block";
+        displayedDialog = d;
+    }
+
+    /**
+     * Hide the provided dialog and update displayedDialog
+     */
+    function hideDialog() {
+        displayedDialog.style.display = "none";
+        displayedDialog = null;
+    }
+
+    /**
      * Show a popup containing a textarea to edit the settings object as JSON
      */
     function showSettings() {
-        settingsDisplayed = true;
-        var settingsPopup = document.getElementById("settings-popup");
-        var textarea = settingsPopup.getElementsByTagName("textarea")[0];
-        textarea.innerHTML = JSON.stringify(settings, null, 4);
-        settingsPopup.style.display = "block";
+        showDialog(dialogs.settings);
+        var elem = dialogs.settings.getElementsByTagName("pre")[0];
+        elem.innerHTML = JSON.stringify(settings, null, 4);
+        dialogs.settings.style.display = "block";
     }
 
     /**
      * Close the settings popup and update the settings object
      */
     function saveSettings() {
-        var settingsPopup = document.getElementById("settings-popup");
-        var textarea = settingsPopup.getElementsByTagName("textarea")[0];
+        var elem = dialogs.settings.getElementsByTagName("pre")[0];
 
         try {
-            settings = JSON.parse(textarea.value);
-            setup();
-            settingsPopup.style.display = "none";
-            settingsDisplayed = false;
-            // Remove error class in case there was an error before
-            textarea.className = "";
+            settings = JSON.parse(elem.innerHTML);
         }
         catch (e) {
             // User did not enter valid JSON
-            textarea.className = "error";
+            elem.className = "error";
+            return;
         }
+
+        setup();
+        // Remove error class in case there was an error before
+        elem.className = "";
+        hideDialog();
     }
 
+    /**
+     * Return the name of a key given the key code
+     */
     function getKeyName(code) {
         if (code >= 65 && code <= 90) {
             return String.fromCharCode(code);
@@ -479,22 +497,33 @@
         "clearCanvas": true
     };
 
+    /**
+     * Show the help dialog if it is currently hidden, and close it if it is
+     * shown
+     */
     function toggleHelp() {
-        if (helpPopup.style.display == "none") {
-            helpPopup.style.display = "block";
+        if (displayedDialog === null) {
+            showDialog(dialogs.help);
         }
-        else {
-            helpPopup.style.display = "none";
+        else if (displayedDialog === dialogs.help) {
+            hideDialog(dialogs.help);
         }
     }
 
+    // Create canvas and context
     var canvas = document.getElementById("main-canvas");
     var ctx = canvas.getContext("2d");
 
     var blobs = [];
     var lfos = {};
-
     var stopped = true;
+    // The DOM element that is currently show, or null if none shown
+    var displayedDialog = null;
+
+    var dialogs = {
+        "settings": document.getElementById("settings-popup"),
+        "help": document.getElementById("help-popup")
+    };
 
     // Start main loop
     var then = Date.now();
@@ -539,6 +568,7 @@
         "help": "Toggle this help"
     }
 
+    // Create a table to show the help text for each keybinding
     var keyTable = document.createElement("table");
     for (var keyName in KEY_NAMES) {
         var keyCell = document.createElement("td");
@@ -552,12 +582,10 @@
         row.appendChild(helpCell);
         keyTable.appendChild(row);
     }
-    var helpPopup = document.getElementById("help-popup");
-    helpPopup.style.display = "none";
-    helpPopup.appendChild(keyTable);
+    dialogs.help.appendChild(keyTable);
 
+    // Listen for keyboard events
     var pressedKeys = {};
-    var settingsDisplayed = false;
     window.addEventListener("keydown", function(event) {
         console.log(event.keyCode);
 
@@ -578,7 +606,7 @@
 
             // Show settings
             case KEY_NAMES.settings:
-                if (!settingsDisplayed) {
+                if (displayedDialog === null) {
                     showSettings();
                 }
                 break;
