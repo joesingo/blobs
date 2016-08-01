@@ -4,6 +4,13 @@
 <head>
     <title></title>
     <style type="text/css">
+        body {
+            font-family: "Helvetica", "Arial", sans-serif;
+            color: #444;
+        }
+        h1, h2, h3 {
+            color: black;
+        }
         #main-canvas {
             display: block;
             margin: auto;
@@ -16,7 +23,7 @@
             margin-left: -190px;
             padding: 20px;
             background: white;
-            border: 1px solid gray;
+            border: 2px solid #444;
         }
         .popup h2 {
             margin-top: 0;
@@ -31,6 +38,16 @@
         .error {
             border: 1px solid red;
         }
+        #help-popup {
+            display: none;
+        }
+        #help-popup table {
+            border-collapse: collapse;
+        }
+        #help-popup table td {
+            padding: 4px 8px;
+            border: 1px solid #888;
+        }
     </style>
 </head>
 
@@ -40,6 +57,12 @@
         <textarea></textarea>
         <button onclick="saveSettings()">Save</button>
     </div>
+
+    <div class="popup" id="help-popup">
+        <h2>Help</h2>
+        <h3>Keybindings</h3>
+    </div>
+
     <canvas id="main-canvas"></canvas>
     <script type="text/javascript">
 
@@ -420,6 +443,17 @@
         }
     }
 
+    function getKeyName(code) {
+        if (code >= 65 && code <= 90) {
+            return String.fromCharCode(code);
+        }
+        // The key is not alphabetic
+        switch (code) {
+            case 16:
+                return "Shift"
+        }
+    }
+
     // User customisable settings
     var settings = {
         "canvas": {
@@ -435,6 +469,15 @@
         },
         "clearCanvas": true
     };
+
+    function toggleHelp() {
+        if (helpPopup.style.display == "none") {
+            helpPopup.style.display = "block";
+        }
+        else {
+            helpPopup.style.display = "none";
+        }
+    }
 
     var canvas = document.getElementById("main-canvas");
     var ctx = canvas.getContext("2d");
@@ -469,7 +512,41 @@
         "wavy": 87, // w
         "settings": 79, // o
         "toggleClear": 75, // k
+        "help": 72, // h
     }
+
+    var KEY_HELP_TEXT = {
+        "pause": "Hold to pause all blob movement. Hold and click to move " +
+                 "all blobs to the clicked position",
+        "randomise": "Press to randomise the direction of each blob",
+        "center": "Press to make all blobs head towards the center of the " +
+                  "screen",
+        "slow": "Hold to make all blobs travel at a slower speed (defined in " +
+                "the settings)",
+        "wavy": "Hold to make all blobs travel in a wavy line",
+        "settings": "Press to bring up the settings dialog",
+        "toggleClear": "Press to toggle clearing of the canvas at the " +
+                       "beginning of each frame",
+        "help": "Toggle this help"
+    }
+
+    var keyTable = document.createElement("table");
+    for (var keyName in KEY_NAMES) {
+        var keyCell = document.createElement("td");
+        keyCell.innerHTML = getKeyName(KEY_NAMES[keyName]);
+
+        var helpCell = document.createElement("td");
+        helpCell.innerHTML = KEY_HELP_TEXT[keyName];
+
+        var row = document.createElement("tr");
+        row.appendChild(keyCell);
+        row.appendChild(helpCell);
+        keyTable.appendChild(row);
+    }
+    var helpPopup = document.getElementById("help-popup");
+    helpPopup.style.display = "none";
+    helpPopup.appendChild(keyTable);
+
     var pressedKeys = {};
     var settingsDisplayed = false;
     window.addEventListener("keydown", function(event) {
@@ -499,6 +576,10 @@
 
             case KEY_NAMES.toggleClear:
                 settings.clearCanvas = !settings.clearCanvas;
+                break;
+
+            case KEY_NAMES.help:
+                toggleHelp();
                 break;
         }
     });
