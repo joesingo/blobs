@@ -277,11 +277,29 @@
          */
         this.draw = function() {
             ctx.fillStyle = this.colour.rbgString;
-            ctx.beginPath();
-            ctx.arc(
-                this.x, this.y, settings.blob.radius, 0, 2 * Math.PI
-            );
-            ctx.fill();
+
+            var coords = [
+                [this.x, this.y]
+            ];
+
+            if (settings.symmetry) {
+                // Reflect this blob in all 4 quadrant of the canvas
+                coords.push(
+                    [this.x, canvas.height - this.y],
+                    [canvas.width - this.x, this.y],
+                    [canvas.width - this.x, canvas.height - this.y]
+                );
+            }
+
+            for (var i in coords) {
+                ctx.beginPath();
+                ctx.arc(
+                    coords[i][0], coords[i][1], settings.blob.radius, 0,
+                    2 * Math.PI
+                );
+                ctx.fill();
+            }
+
         }
     }
 
@@ -453,7 +471,7 @@
         var elem = dialogs.settings.getElementsByTagName("pre")[0];
 
         try {
-            settings = JSON.parse(elem.innerHTML);
+            settings = JSON.parse(elem.textContent);
         }
         catch (e) {
             // User did not enter valid JSON
@@ -490,11 +508,12 @@
         },
         "blob": {
             "radius": 3,
-            "count": 2500,
+            "count": 1300,
             "speed": 100,
             "slowSpeed": 50
         },
-        "clearCanvas": true
+        "clearCanvas": true,
+        "symmetry": true
     };
 
     /**
