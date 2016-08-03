@@ -385,7 +385,8 @@
         );
 
         // Modulate blob hue
-        lfos.hue = new LFO(0, 360, 30, function(value) {
+        lfos.hue = new LFO(0, 360, settings.hueChangePerSecond,
+            function(value) {
             for (var i in blobs) {
                 var colour = blobs[i].colour;
                 blobs[i].colour.update(
@@ -528,7 +529,8 @@
             "slowSpeed": 50
         },
         "clearCanvas": true,
-        "symmetry": true
+        "symmetry": true,
+        "hueChangePerSecond": 360
     };
 
     // Use the default settings if local storage doesn't contain settings
