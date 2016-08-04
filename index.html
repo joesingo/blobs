@@ -31,9 +31,24 @@
         #settings-popup {
             display: none;
         }
-        #settings-popup textarea {
-            width: 100%;
-            height: 20em;
+        #settings-popup pre {
+            outline: none;
+        }
+        #settings-popup .buttons {
+            padding: 0 15px;
+        }
+        #settings-popup button {
+            font-size: 1.1em;
+            padding: 5px 10px;
+            background: #eee;
+            border: 1px solid black;
+        }
+        #settings-popup button:hover {
+            background: #dedede;
+        }
+        #settings-popup button:active {
+            outline: none;
+            border-color: gray;
         }
         .error {
             border: 1px solid red;
@@ -64,8 +79,10 @@
     <div class="popup" id="settings-popup">
         <h2>Settings</h2>
         <pre contenteditable="true"></pre>
-        <button onclick="saveSettings()">Save</button>
-        <button style="float:right" onclick="resetSettings()">Reset</button>
+        <div class="buttons">
+            <button onclick="saveSettings()">Save</button>
+            <button style="float:right" onclick="resetSettings()">Reset</button>
+        </div>
     </div>
 
     <div class="popup" id="help-popup">
@@ -400,6 +417,12 @@
         // });
 
         stopped = false;
+
+        // Draw background colour here - cannot rely on it being done in draw()
+        // since the clearCanvas option could be false, in which case background
+        // will be white
+        ctx.fillStyle = settings.canvas.backgroundColour;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     /**
@@ -530,7 +553,7 @@
         },
         "clearCanvas": true,
         "symmetry": true,
-        "hueChangePerSecond": 360
+        "hueChangePerSecond": 30
     };
 
     // Use the default settings if local storage doesn't contain settings
@@ -595,6 +618,7 @@
         "settings": 79, // o
         "toggleClear": 75, // k
         "help": 72, // h
+        "esc": 27, // esc
     }
 
     var KEY_HELP_TEXT = {
@@ -614,7 +638,7 @@
 
     // Create a table to show the help text for each keybinding
     var keyTable = document.createElement("table");
-    for (var keyName in KEY_NAMES) {
+    for (var keyName in KEY_HELP_TEXT) {
         var keyCell = document.createElement("td");
         keyCell.innerHTML = "<span>" + getKeyName(KEY_NAMES[keyName]) + "</span>";
 
@@ -661,6 +685,17 @@
 
             case KEY_NAMES.help:
                 toggleHelp();
+                break;
+
+            case KEY_NAMES.esc:
+                if (displayedDialog == dialogs.settings) {
+                    // Save settings when Esc is pressed
+                    saveSettings();
+                }
+                // Otherwise hide a dialog is one is currently shown
+                else if (displayedDialog !== null) {
+                    hideDialog();
+                }
                 break;
         }
     });
