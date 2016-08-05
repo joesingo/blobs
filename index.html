@@ -78,14 +78,11 @@
         .json {
             color: purple;
         }
-        .json .quote {
-            color: red;
-        }
-        .json .key {
-            color: green;
+        .json .string, .json .quote{
+            color: #0d324d;
         }
         .json .bracket {
-            color: blue;
+            color: black;
         }
     </style>
 </head>
@@ -587,7 +584,7 @@
 
         // Strings
         var quote = '<span class="quote">"</span>';
-        json = json.replace(/"([^"]+)"/g, quote + '<span class="key">$1</span>' + quote);
+        json = json.replace(/"([^"]+)"/g, quote + '<span class="string">$1</span>' + quote);
 
         return json;
     }
