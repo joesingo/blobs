@@ -31,8 +31,10 @@
         #settings-popup {
             display: none;
         }
-        #settings-popup pre {
+        #settings-popup div.json {
             outline: none;
+            font-family: monospace;
+            white-space: pre;
         }
         #settings-popup .buttons {
             padding: 0 15px;
@@ -72,13 +74,26 @@
             text-align: center;
             margin: 0 20px;
         }
+
+        .json {
+            color: purple;
+        }
+        .json .quote {
+            color: red;
+        }
+        .json .key {
+            color: green;
+        }
+        .json .bracket {
+            color: blue;
+        }
     </style>
 </head>
 
 <body>
     <div class="popup" id="settings-popup">
         <h2>Settings</h2>
-        <pre contenteditable="true"></pre>
+        <div class="json" contenteditable="true"></div>
         <div class="buttons">
             <button onclick="saveSettings()">Save</button>
             <button style="float:right" onclick="resetSettings()">Reset</button>
@@ -464,6 +479,29 @@
     }
 
     /**
+      * Add the specified class to the given element
+      */
+    function addClass(element, className) {
+        var classes = element.className.split(" ");
+        if (classes.indexOf(className) === -1) {
+            classes.push(className);
+        }
+        element.className = classes.join(" ");
+    }
+
+    /**
+      * Remove the specified class from the given element
+      */
+    function removeClass(element, className) {
+        var classes = element.className.split(" ");
+        var index = classes.indexOf(className);
+        if (index !== -1) {
+            classes.splice(index, 1);
+        }
+        element.className = classes.join(" ");
+    }
+
+    /**
      * Show the provided dialog and update displayedDialog
      */
     function showDialog(d) {
@@ -484,8 +522,8 @@
      */
     function showSettings() {
         showDialog(dialogs.settings);
-        var elem = dialogs.settings.getElementsByTagName("pre")[0];
-        elem.innerHTML = JSON.stringify(settings, null, 4);
+        var elem = dialogs.settings.getElementsByTagName("div")[0];
+        elem.innerHTML = syntaxHighlightJSON(settings);
         dialogs.settings.style.display = "block";
     }
 
@@ -494,14 +532,14 @@
      * local storage
      */
     function saveSettings() {
-        var elem = dialogs.settings.getElementsByTagName("pre")[0];
+        var elem = dialogs.settings.getElementsByTagName("div")[0];
 
         try {
             settings = JSON.parse(elem.textContent);
         }
         catch (e) {
             // User did not enter valid JSON
-            elem.className = "error";
+            addClass(elem, "error");
             return;
         }
 
@@ -509,16 +547,15 @@
         localStorage.setItem("settings", JSON.stringify(settings));
 
         setup();
-        // Remove error class in case there was an error before
-        elem.className = "";
         hideDialog();
+        removeClass(elem, "error");
     }
 
     /**
      * Reset settings to the defaults and remove from local storage
      */
     function resetSettings() {
-        var elem = dialogs.settings.getElementsByTagName("pre")[0];
+        var elem = dialogs.settings.getElementsByTagName("div")[0];
         elem.textContent = JSON.stringify(defaultSettings);
         saveSettings();
         localStorage.removeItem("settings");
@@ -536,6 +573,23 @@
             case 16:
                 return "Shift"
         }
+    }
+
+    /**
+      * Return HTML for syntax highlighted JSON for the given object
+      */
+    function syntaxHighlightJSON(obj) {
+        var json = JSON.stringify(obj, null, 4);
+
+        // Brackets - match {, }, [ or ] where it is NOT followed by .*" (i.e.
+        // not part of a string)
+        json = json.replace(/({|}|\[|\])(?!.*")/g, "<span class='bracket'>$&</span>");
+
+        // Strings
+        var quote = '<span class="quote">"</span>';
+        json = json.replace(/"([^"]+)"/g, quote + '<span class="key">$1</span>' + quote);
+
+        return json;
     }
 
     // User customisable settings
