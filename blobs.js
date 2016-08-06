@@ -150,15 +150,7 @@ function LFO(minValue, maxValue, speed, callback, loopRound) {
 function Preset(moves) {
     var position = 0;
 
-    this.moves = [
-        {"time": 0, "type": "keydown", "key": "pause"},
-        {"time": 0, "type": "keypress", "key": "center"},
-        {"time": 0.1, "type": "keyup", "key": "pause"},
-        {"time": 1, "type": "keypress", "key": "randomise"},
-        {"time": 3, "type":"click", "coords": [0, 0]},
-        {"time": 4, "type": "keypress", "key": "toggleClear"},
-        {"time": 4, "type": "keypress", "key": "center"}
-    ];
+    this.moves = moves;
 
     this.update = function(dt) {
         for (var i in this.moves) {
@@ -393,7 +385,7 @@ function setup() {
 
     blobs = createBlobs(settings.blob.count);
     lfos = {};
-    currentPreset = new Preset();
+    currentPreset = null;
 
 
     // Modulate blob bearing
@@ -627,6 +619,18 @@ if (localStorage.getItem("settings")) {
                     "defaults");
         settings = defaultSettings;
     }
+}
+
+var presets = {
+    "test": [
+        {"time": 0, "type": "keydown", "key": "pause"},
+        {"time": 0, "type": "keypress", "key": "center"},
+        {"time": 0.1, "type": "keyup", "key": "pause"},
+        {"time": 1, "type": "keypress", "key": "randomise"},
+        {"time": 3, "type":"click", "coords": [0, 0]},
+        {"time": 4, "type": "keypress", "key": "toggleClear"},
+        {"time": 4, "type": "keypress", "key": "center"}
+    ]
 }
 
 /**
