@@ -347,6 +347,9 @@ function handleKeypress(keyCode) {
                 hideDialog();
             }
             break;
+
+        case KEY_NAMES.toggleSymmetry:
+            settings.symmetry = !settings.symmetry;
     }
 }
 
@@ -564,6 +567,8 @@ function getKeyName(code) {
     switch (code) {
         case 16:
             return "Shift"
+        case 27:
+            return "Esc"
     }
 }
 
@@ -584,6 +589,19 @@ function syntaxHighlightJSON(obj) {
     return json;
 }
 
+/**
+ * Show the help dialog if it is currently hidden, and close it if it is
+ * shown
+ */
+function toggleHelp() {
+    if (displayedDialog === null) {
+        showDialog(dialogs.help);
+    }
+    else if (displayedDialog === dialogs.help) {
+        hideDialog(dialogs.help);
+    }
+}
+
 // User customisable settings
 var defaultSettings = {
     "canvas": {
@@ -600,7 +618,7 @@ var defaultSettings = {
     "clearCanvas": true,
     "symmetry": true,
     "hueChangePerSecond": 30,
-    "version": 1
+    "version": 1  // Increment this when changing the structure of settings
 };
 var settings = defaultSettings;
 
@@ -631,19 +649,6 @@ var presets = {
         {"time": 4, "type": "keypress", "key": "toggleClear"},
         {"time": 4, "type": "keypress", "key": "center"}
     ]
-}
-
-/**
- * Show the help dialog if it is currently hidden, and close it if it is
- * shown
- */
-function toggleHelp() {
-    if (displayedDialog === null) {
-        showDialog(dialogs.help);
-    }
-    else if (displayedDialog === dialogs.help) {
-        hideDialog(dialogs.help);
-    }
 }
 
 // Create canvas and context
@@ -689,22 +694,25 @@ var KEY_NAMES = {
     "settings": 79, // o
     "toggleClear": 75, // k
     "help": 72, // h
+    "toggleSymmetry": 89, // y
     "esc": 27, // esc
 }
 
 var KEY_HELP_TEXT = {
-    "pause": "Hold to pause all blob movement. Hold and click to move " +
-             "all blobs to the clicked position",
-    "randomise": "Press to randomise the direction of each blob",
-    "center": "Press to make all blobs head towards the center of the " +
-              "screen",
-    "slow": "Hold to make all blobs travel at a slower speed (defined in " +
-            "the settings)",
-    "wavy": "Hold to make all blobs travel in a wavy line",
-    "settings": "Press to bring up the settings dialog",
-    "toggleClear": "Press to toggle clearing of the canvas at the " +
-                   "beginning of each frame",
-    "help": "Toggle this help"
+    "pause":         "Hold to pause all blob movement. Hold and click to " +
+                     "move all blobs to the clicked position",
+    "randomise":     "Press to randomise the direction of each blob",
+    "center":        "Press to make all blobs head towards the center of the " +
+                     "screen",
+    "slow":          "Hold to make all blobs travel at a slower speed " +
+                     "(defined in the settings)",
+    "wavy":          "Hold to make all blobs travel in a wavy line",
+    "settings":      "Press to bring up the settings dialog",
+    "toggleClear":   "Press to toggle clearing of the canvas at the " +
+                     "beginning of each frame",
+   "toggleSymmetry": "Press to toggle symmetry",
+    "help":          "Toggle this help",
+    "esc":           "Save settings/Close dialog"
 }
 
 // Create a table to show the help text for each keybinding
