@@ -140,6 +140,56 @@ function LFO(minValue, maxValue, speed, callback, loopRound) {
 }
 
 /**
+  * An object representing a sequence of events (i.e. keypresses and
+  * clicks) to run automatically as a preset
+  *
+  * moves - An array of 'moves' to perform. Each element of this array is an
+  *         object with keys for time (in seconds), type ('keyup', 'keydown',
+  *         'keypress' or click) and 'key' or 'coords' depending on the type
+  */
+function Preset(moves) {
+    var position = 0;
+
+    this.moves = [
+        {"time": 0, "type": "keydown", "key": "pause"},
+        {"time": 0, "type": "keypress", "key": "center"},
+        {"time": 0.1, "type": "keyup", "key": "pause"},
+        {"time": 1, "type": "keypress", "key": "randomise"},
+        {"time": 3, "type":"click", "coords": [0, 0]},
+        {"time": 4, "type": "keypress", "key": "toggleClear"},
+        {"time": 4, "type": "keypress", "key": "center"}
+    ];
+
+    this.update = function(dt) {
+        for (var i in this.moves) {
+            if (this.moves[i].time < position) {
+                switch (this.moves[i].type) {
+                    case "keyup":
+                        delete pressedKeys[KEY_NAMES[this.moves[i].key]];
+                        break;
+
+                    case "keydown":
+                        pressedKeys[KEY_NAMES[this.moves[i].key]] = true;
+                        break;
+
+                    case "keypress":
+                        handleKeypress(KEY_NAMES[this.moves[i].key]);
+                        break;
+
+                    case "click":
+                        handleClick(this.moves[i].coords[0], this.moves[i].coords[1]);
+                        break;
+                }
+
+                this.moves.splice(i, 1);
+            }
+        }
+
+        position += dt;
+    }
+}
+
+/**
  * An object representing a colour as HSV
  */
 function Colour(h, s, v) {
@@ -262,6 +312,53 @@ function handleClick(x, y) {
 }
 
 /**
+  * Handle a keypress
+  *
+  * keyCode - The key code as given by event.keyCode
+  */
+function handleKeypress(keyCode) {
+    switch (keyCode) {
+        // Randomise the bearing of all blobs
+        case KEY_NAMES.randomise:
+            for (var i in blobs) {
+                blobs[i].bearing = Math.random() * 2 * Math.PI;
+            }
+            break;
+
+        // Click at the center of the canvas
+        case KEY_NAMES.center:
+            handleClick(canvas.width / 2, canvas.height / 2);
+            break;
+
+        // Show settings
+        case KEY_NAMES.settings:
+            if (displayedDialog === null) {
+                showSettings();
+            }
+            break;
+
+        case KEY_NAMES.toggleClear:
+            settings.clearCanvas = !settings.clearCanvas;
+            break;
+
+        case KEY_NAMES.help:
+            toggleHelp();
+            break;
+
+        case KEY_NAMES.esc:
+            if (displayedDialog == dialogs.settings) {
+                // Save settings when Esc is pressed
+                saveSettings();
+            }
+            // Otherwise hide a dialog is one is currently shown
+            else if (displayedDialog !== null) {
+                hideDialog();
+            }
+            break;
+    }
+}
+
+/**
  * Return an array of blobs, optionally at a specified co-ordinate
  *
  * count - The number of blobs to create
@@ -296,6 +393,8 @@ function setup() {
 
     blobs = createBlobs(settings.blob.count);
     lfos = {};
+    currentPreset = new Preset();
+
 
     // Modulate blob bearing
     lfos.bearingShift = new LFO(-Math.PI/4, Math.PI/4, 1,
@@ -344,6 +443,14 @@ function mainUpdate(dt) {
                 continue;
             }
             lfos[i].update(dt);
+        }
+
+        if (currentPreset !== null) {
+            currentPreset.update(dt);
+
+            if (currentPreset.moves.length === 0) {
+                currentPreset = null;
+            }
         }
 
         for (var i in blobs) {
@@ -541,6 +648,8 @@ var ctx = canvas.getContext("2d");
 
 var blobs = [];
 var lfos = {};
+var currentPreset = null;
+
 var stopped = true;
 // The DOM element that is currently show, or null if none shown
 var displayedDialog = null;
@@ -614,48 +723,8 @@ dialogs.help.appendChild(keyTable);
 var pressedKeys = {};
 window.addEventListener("keydown", function(event) {
     console.log(event.keyCode);
-
     pressedKeys[event.keyCode] = true;
-
-    switch (event.keyCode) {
-        // Randomise the bearing of all blobs
-        case KEY_NAMES.randomise:
-            for (var i in blobs) {
-                blobs[i].bearing = Math.random() * 2 * Math.PI;
-            }
-            break;
-
-        // Click at the center of the canvas
-        case KEY_NAMES.center:
-            handleClick(canvas.width / 2, canvas.height / 2);
-            break;
-
-        // Show settings
-        case KEY_NAMES.settings:
-            if (displayedDialog === null) {
-                showSettings();
-            }
-            break;
-
-        case KEY_NAMES.toggleClear:
-            settings.clearCanvas = !settings.clearCanvas;
-            break;
-
-        case KEY_NAMES.help:
-            toggleHelp();
-            break;
-
-        case KEY_NAMES.esc:
-            if (displayedDialog == dialogs.settings) {
-                // Save settings when Esc is pressed
-                saveSettings();
-            }
-            // Otherwise hide a dialog is one is currently shown
-            else if (displayedDialog !== null) {
-                hideDialog();
-            }
-            break;
-    }
+    handleKeypress(event.keyCode);
 });
 window.addEventListener("keyup", function(event) {
     delete pressedKeys[event.keyCode];
