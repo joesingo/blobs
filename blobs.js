@@ -350,6 +350,13 @@ function handleKeypress(keyCode) {
 
         case KEY_NAMES.toggleSymmetry:
             settings.symmetry = !settings.symmetry;
+            break;
+
+        case KEY_NAMES.reverse:
+            for (var i in blobs) {
+                blobs[i].bearing += Math.PI;
+            }
+            break;
     }
 }
 
@@ -695,6 +702,7 @@ var KEY_NAMES = {
     "toggleClear": 75, // k
     "help": 72, // h
     "toggleSymmetry": 89, // y
+    "reverse": 86, // v
     "esc": 27, // esc
 }
 
@@ -704,6 +712,7 @@ var KEY_HELP_TEXT = {
     "randomise":     "Press to randomise the direction of each blob",
     "center":        "Press to make all blobs head towards the center of the " +
                      "screen",
+    "reverse":       "Press to reverse the direction of all blobs",
     "slow":          "Hold to make all blobs travel at a slower speed " +
                      "(defined in the settings)",
     "wavy":          "Hold to make all blobs travel in a wavy line",
