@@ -335,20 +335,23 @@ function setup() {
  * dt - Time in seconds since the last frame
  */
 function mainUpdate(dt) {
-    for (var i in lfos) {
-        // Skip updating this LFO if it's bearingShift and the key is not
-        // pressed
-        if (i === "bearingShift" && !(KEY_NAMES.wavy in pressedKeys)) {
-            continue;
+    // Only update if no dialogs are visible
+    if (displayedDialog === null) {
+        for (var i in lfos) {
+            // Skip updating this LFO if it's bearingShift and the key is not
+            // pressed
+            if (i === "bearingShift" && !(KEY_NAMES.wavy in pressedKeys)) {
+                continue;
+            }
+            lfos[i].update(dt);
         }
-        lfos[i].update(dt);
-    }
 
-    for (var i in blobs) {
-        blobs[i].update(dt);
-    }
+        for (var i in blobs) {
+            blobs[i].update(dt);
+        }
 
-    draw();
+        draw();
+    }
 }
 
 /**
