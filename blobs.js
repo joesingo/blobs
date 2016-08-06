@@ -497,16 +497,27 @@ var defaultSettings = {
     },
     "clearCanvas": true,
     "symmetry": true,
-    "hueChangePerSecond": 30
+    "hueChangePerSecond": 30,
+    "version": 1
 };
+var settings = defaultSettings;
 
-// Use the default settings if local storage doesn't contain settings
-if (!localStorage.getItem("settings")) {
-    localStorage.setItem(
-        "settings", JSON.stringify(defaultSettings)
-    );
+// Try to use the settings saved in local storage if it exists
+if (localStorage.getItem("settings")) {
+    try {
+        settings = JSON.parse(localStorage.getItem("settings"));
+    }
+    catch (e) {
+        console.log("WARNING: Saved settings was not valid JSON");
+    }
+
+    // Check the version number of the saved settings
+    if (settings.version !== defaultSettings.version) {
+        console.log("INFO: Saved settings were for an old version - using " +
+                    "defaults");
+        settings = defaultSettings;
+    }
 }
-var settings = JSON.parse(localStorage.getItem("settings"));
 
 /**
  * Show the help dialog if it is currently hidden, and close it if it is
