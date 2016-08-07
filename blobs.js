@@ -169,6 +169,8 @@ function Preset(moves) {
                         break;
 
                     case "click":
+                        // TODO: Click coordinates should be normalised to
+                        //       0-100 to cope with different sized canvases
                         handleClick(this.moves[i].coords[0], this.moves[i].coords[1]);
                         break;
                 }
@@ -178,6 +180,46 @@ function Preset(moves) {
         }
 
         position += dt;
+    }
+}
+
+/**
+  * An object to represent the recording of a preset, with methods to add events
+  * and calculate the timings of events
+  */
+function PresetRecording() {
+    this.moves = [];
+
+    var startTime = null;
+
+    /**
+      * Calculate the time for an event happening right now. If this is the
+      * first event then the time will be 0, otherwise it will be the number
+      * of seconds elapsed since the first event
+      */
+    var getTime = function() {
+        if (startTime === null) {
+            startTime = Date.now();
+            return 0;
+        }
+
+        return (Date.now() - startTime) / 1000;
+    }
+
+    this.addClick = function(x, y) {
+        this.moves.push({
+            "time": getTime(),
+            "type": "click",
+            "coords": [x, y]
+        });
+    }
+
+    this.addKeyEvent = function(keyName, type) {
+        this.moves.push({
+            "time": getTime(),
+            "type": type,
+            "key": keyName
+        });
     }
 }
 
@@ -310,6 +352,10 @@ function handleClick(x, y) {
     else {
         attractBlobs(blobs, x, y);
     }
+
+    if (presetRecording !== null) {
+        presetRecording.addClick(x, y);
+    }
 }
 
 /**
@@ -405,7 +451,7 @@ function setup() {
     blobs = createBlobs(settings.blob.count);
     lfos = {};
     currentPreset = null;
-
+    presetRecording = new PresetRecording();
 
     // Modulate blob bearing
     lfos.bearingShift = new LFO(-Math.PI/4, Math.PI/4, 1,
@@ -589,6 +635,19 @@ function getKeyName(code) {
 }
 
 /**
+  * Return the 'friendly name' for a key given the keycode. 'friendly name'
+  * is e.g. 'pause', 'randomise' etc
+  */
+function getKeyFriendlyName(code) {
+    for (var name in KEY_NAMES) {
+        if (KEY_NAMES[name] === code) {
+            return name;
+        }
+    }
+    return null;
+}
+
+/**
   * Return HTML for syntax highlighted JSON for the given object
   */
 function syntaxHighlightJSON(obj) {
@@ -675,6 +734,7 @@ var ctx = canvas.getContext("2d");
 var blobs = [];
 var lfos = {};
 var currentPreset = null;
+var presetRecording = null;
 
 var stopped = true;
 // The DOM element that is currently show, or null if none shown
@@ -758,6 +818,12 @@ window.addEventListener("keydown", function(event) {
     console.log(event.keyCode);
     pressedKeys[event.keyCode] = true;
     handleKeypress(event.keyCode);
+
+    if (presetRecording !== null) {
+        presetRecording.addKeyEvent(
+            getKeyFriendlyName(event.keyCode), "keydown"
+        );
+    }
 });
 window.addEventListener("keyup", function(event) {
     delete pressedKeys[event.keyCode];
@@ -769,6 +835,12 @@ window.addEventListener("keyup", function(event) {
                 blobs[i].bearingShift = 0;
             }
             break;
+    }
+
+    if (presetRecording !== null) {
+        presetRecording.addKeyEvent(
+            getKeyFriendlyName(event.keyCode), "keyup"
+        );
     }
 });
 

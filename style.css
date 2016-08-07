@@ -76,7 +76,10 @@ h1, h2, h3 {
 .json {
     color: purple;
 }
-.json .string, .json .quote{
+.json .quote {
+    color: #994500;
+}
+.json .string {
     color: #0d324d;
 }
 .json .bracket {
