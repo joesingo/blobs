@@ -221,6 +221,10 @@ function Blob(x, y, bearing, colour) {
     // by an LFO)
     this.bearingShift = 0;
 
+    // This amount is added to the speed wben the randomiseSpeed button is down
+    this.extraSpeed = 2 * settings.blob.maxExtraSpeed * Math.random() -
+                      settings.blob.maxExtraSpeed;
+
     /**
      * Update this blob's position
      */
@@ -229,6 +233,11 @@ function Blob(x, y, bearing, colour) {
         if (!(KEY_NAMES.pause in pressedKeys)) {
             var speed = KEY_NAMES.slow in pressedKeys ?
                         settings.blob.slowSpeed : settings.blob.speed;
+
+            if (KEY_NAMES.randomiseSpeed in pressedKeys) {
+                // Add the extra speed
+                speed += this.extraSpeed;
+            }
 
             var bearing = this.bearing + this.bearingShift;
 
@@ -620,12 +629,13 @@ var defaultSettings = {
         "radius": 3,
         "count": 1300,
         "speed": 100,
-        "slowSpeed": 50
+        "slowSpeed": 50,
+        "maxExtraSpeed": 100
     },
     "clearCanvas": true,
     "symmetry": true,
     "hueChangePerSecond": 30,
-    "version": 1  // Increment this when changing the structure of settings
+    "version": 1.1  // Increment this when changing the structure of settings
 };
 var settings = defaultSettings;
 
@@ -703,29 +713,32 @@ var KEY_NAMES = {
     "help": 72, // h
     "toggleSymmetry": 89, // y
     "reverse": 86, // v
+    "randomiseSpeed": 81, // q
     "esc": 27, // esc
 }
 
 var KEY_HELP_TEXT = {
-    "pause":         "Hold to pause all blob movement. Hold and click to " +
-                     "move all blobs to the clicked position",
-    "randomise":     "Press to randomise the direction of each blob",
-    "center":        "Press to make all blobs head towards the center of the " +
-                     "screen",
-    "reverse":       "Press to reverse the direction of all blobs",
-    "slow":          "Hold to make all blobs travel at a slower speed " +
-                     "(defined in the settings)",
-    "wavy":          "Hold to make all blobs travel in a wavy line",
-    "settings":      "Press to bring up the settings dialog",
-    "toggleClear":   "Press to toggle clearing of the canvas at the " +
-                     "beginning of each frame",
-   "toggleSymmetry": "Press to toggle symmetry",
-    "help":          "Toggle this help",
-    "esc":           "Save settings/Close dialog"
+    "pause":          "Hold to pause all blob movement. Hold and click to " +
+                      "move all blobs to the clicked position",
+    "randomise":      "Press to randomise the direction of each blob",
+    "center":         "Press to make all blobs head towards the center of the " +
+                      "screen",
+    "reverse":        "Press to reverse the direction of all blobs",
+    "slow":           "Hold to make all blobs travel at a slower speed " +
+                      "(defined in the settings)",
+    "wavy":           "Hold to make all blobs travel in a wavy line",
+    "randomiseSpeed": "Hold to increase/decrease each blob's speed by a " +
+                      "random amount",
+    "settings":       "Press to bring up the settings dialog",
+    "toggleClear":    "Press to toggle clearing of the canvas at the " +
+                      "beginning of each frame",
+   "toggleSymmetry":  "Press to toggle symmetry",
+    "help":           "Toggle this help",
+    "esc":            "Save settings/Close dialog"
 }
 
 // Create a table to show the help text for each keybinding
-var keyTable = document.createElement("table");
+var keyTable = document.getElementById("key-table");
 for (var keyName in KEY_HELP_TEXT) {
     var keyCell = document.createElement("td");
     keyCell.innerHTML = "<span>" + getKeyName(KEY_NAMES[keyName]) + "</span>";
@@ -738,7 +751,6 @@ for (var keyName in KEY_HELP_TEXT) {
     row.appendChild(helpCell);
     keyTable.appendChild(row);
 }
-dialogs.help.appendChild(keyTable);
 
 // Listen for keyboard events
 var pressedKeys = {};

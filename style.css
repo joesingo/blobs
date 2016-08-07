@@ -53,7 +53,10 @@ h1, h2, h3 {
     display: none;
 }
 #help-popup table {
+    display: block;
     border-collapse: collapse;
+    max-height: 350px;
+    overflow-y: scroll;
 }
 #help-popup table td {
     padding: 4px 8px;
