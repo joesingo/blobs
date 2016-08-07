@@ -169,9 +169,11 @@ function Macro(moves) {
                         break;
 
                     case "click":
-                        // TODO: Click coordinates should be normalised to
-                        //       0-100 to cope with different sized canvases
-                        handleClick(this.moves[i].coords[0], this.moves[i].coords[1]);
+                        // Coordinates go from 0-100 as a percentage of
+                        // width/height
+                        var x = this.moves[i].coords[0] * canvas.width / 100;
+                        var y = this.moves[i].coords[1] * canvas.height / 100;
+                        handleClick(x, y);
                         break;
                 }
 
@@ -354,7 +356,7 @@ function handleClick(x, y) {
     }
 
     if (macroRecording !== null) {
-        macroRecording.addClick(x, y);
+        macroRecording.addClick(x / canvas.width, y / canvas.height);
     }
 }
 
@@ -724,6 +726,13 @@ var macros = {
         {"time": 3, "type":"click", "coords": [0, 0]},
         {"time": 4, "type": "keypress", "key": "toggleClear"},
         {"time": 4, "type": "keypress", "key": "center"}
+    ],
+    "test2": [
+        {"time": 0, "type": "keydown", "key": "pause"},
+        {"time": 0, "type": "keypress", "key": "center"},
+        {"time": 0.1, "type": "keyup", "key": "pause"},
+        {"time": 2, "type":"click", "coords": [25, 25]},
+        {"time": 4, "type":"click", "coords": [50, 10]}
     ]
 }
 
@@ -819,10 +828,10 @@ window.addEventListener("keydown", function(event) {
     pressedKeys[event.keyCode] = true;
     handleKeypress(event.keyCode);
 
-    if (macroRecording !== null) {
-        macroRecording.addKeyEvent(
-            getKeyFriendlyName(event.keyCode), "keydown"
-        );
+    // Record this keydown event in the macro if we are currently recording
+    var friendlyName = getKeyFriendlyName(event.keyCode);
+    if (macroRecording !== null && friendlyName !== null) {
+        macroRecording.addKeyEvent(friendlyName, "keydown");
     }
 });
 window.addEventListener("keyup", function(event) {
@@ -837,10 +846,10 @@ window.addEventListener("keyup", function(event) {
             break;
     }
 
-    if (macroRecording !== null) {
-        macroRecording.addKeyEvent(
-            getKeyFriendlyName(event.keyCode), "keyup"
-        );
+    // Record in the macro if we are currently recording
+    var friendlyName = getKeyFriendlyName(event.keyCode);
+    if (macroRecording !== null && friendlyName !== null) {
+        macroRecording.addKeyEvent(friendlyName, "keyup");
     }
 });
 
