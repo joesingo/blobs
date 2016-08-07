@@ -144,8 +144,8 @@ function LFO(minValue, maxValue, speed, callback, loopRound) {
   * clicks) to run automatically as a macro
   *
   * moves - An array of 'moves' to perform. Each element of this array is an
-  *         object with keys for time (in seconds), type ('keyup', 'keydown',
-  *         'keypress' or click) and 'key' or 'coords' depending on the type
+  *         object with keys for time (in seconds), type ('keyup', 'keydown' or
+  *         click) and 'key' or 'coords' depending on the type
   */
 function Macro(moves) {
     var position = 0;
@@ -162,9 +162,6 @@ function Macro(moves) {
 
                     case "keydown":
                         pressedKeys[KEY_NAMES[this.moves[i].key]] = true;
-                        break;
-
-                    case "keypress":
                         handleKeypress(KEY_NAMES[this.moves[i].key]);
                         break;
 
@@ -354,10 +351,6 @@ function handleClick(x, y) {
     else {
         attractBlobs(blobs, x, y);
     }
-
-    if (macroRecording !== null) {
-        macroRecording.addClick(x / canvas.width, y / canvas.height);
-    }
 }
 
 /**
@@ -372,11 +365,6 @@ function handleKeypress(keyCode) {
             for (var i in blobs) {
                 blobs[i].bearing = Math.random() * 2 * Math.PI;
             }
-            break;
-
-        // Click at the center of the canvas
-        case KEY_NAMES.center:
-            handleClick(canvas.width / 2, canvas.height / 2);
             break;
 
         // Show settings
@@ -510,6 +498,13 @@ function mainUpdate(dt) {
             if (currentMacro.moves.length === 0) {
                 currentMacro = null;
             }
+        }
+
+        // Click at the center of the canvas. This is handled here so that the
+        // user can hold the center button to continually direct blobs to the
+        // center, instead of just when the key is first pressed
+        if (KEY_NAMES.center in pressedKeys) {
+            handleClick(canvas.width / 2, canvas.height / 2, true);
         }
 
         for (var i in blobs) {
@@ -726,13 +721,6 @@ var macros = {
         {"time": 3, "type":"click", "coords": [0, 0]},
         {"time": 4, "type": "keypress", "key": "toggleClear"},
         {"time": 4, "type": "keypress", "key": "center"}
-    ],
-    "test2": [
-        {"time": 0, "type": "keydown", "key": "pause"},
-        {"time": 0, "type": "keypress", "key": "center"},
-        {"time": 0.1, "type": "keyup", "key": "pause"},
-        {"time": 2, "type":"click", "coords": [25, 25]},
-        {"time": 4, "type":"click", "coords": [50, 10]}
     ]
 }
 
@@ -769,6 +757,14 @@ canvas.addEventListener("click", function(event) {
     var x = event.offsetX;
     var y = event.offsetY;
     handleClick(x, y);
+
+    // Record this click in the current macro recording
+    if (macroRecording !== null) {
+        macroRecording.addClick(
+            100 * x / canvas.width,
+            100 * y / canvas.height
+        );
+    }
 });
 
 var KEY_NAMES = {
@@ -825,13 +821,18 @@ for (var keyName in KEY_HELP_TEXT) {
 var pressedKeys = {};
 window.addEventListener("keydown", function(event) {
     console.log(event.keyCode);
-    pressedKeys[event.keyCode] = true;
-    handleKeypress(event.keyCode);
 
-    // Record this keydown event in the macro if we are currently recording
-    var friendlyName = getKeyFriendlyName(event.keyCode);
-    if (macroRecording !== null && friendlyName !== null) {
-        macroRecording.addKeyEvent(friendlyName, "keydown");
+    if (!(event.keyCode in pressedKeys)) {
+        // We only need to call handleKeypress once
+        handleKeypress(event.keyCode);
+
+        // Record this keydown event in the macro if we are currently recording
+        var friendlyName = getKeyFriendlyName(event.keyCode);
+        if (macroRecording !== null && friendlyName !== null) {
+            macroRecording.addKeyEvent(friendlyName, "keydown");
+        }
+
+        pressedKeys[event.keyCode] = true;
     }
 });
 window.addEventListener("keyup", function(event) {
