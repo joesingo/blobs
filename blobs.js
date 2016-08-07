@@ -451,7 +451,7 @@ function setup() {
     blobs = createBlobs(settings.blob.count);
     lfos = {};
     currentMacro = null;
-    macroRecording = new macroRecording();
+    macroRecording = new MacroRecording();
 
     // Modulate blob bearing
     lfos.bearingShift = new LFO(-Math.PI/4, Math.PI/4, 1,
