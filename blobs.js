@@ -621,8 +621,8 @@ function toggleHelp() {
 // User customisable settings
 var defaultSettings = {
     "canvas": {
-        "width": 930,
-        "height": 600,
+        "width": window.innerWidth,
+        "height": window.innerHeight,
         "backgroundColour": "black"
     },
     "blob": {
