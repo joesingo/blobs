@@ -141,13 +141,13 @@ function LFO(minValue, maxValue, speed, callback, loopRound) {
 
 /**
   * An object representing a sequence of events (i.e. keypresses and
-  * clicks) to run automatically as a preset
+  * clicks) to run automatically as a macro
   *
   * moves - An array of 'moves' to perform. Each element of this array is an
   *         object with keys for time (in seconds), type ('keyup', 'keydown',
   *         'keypress' or click) and 'key' or 'coords' depending on the type
   */
-function Preset(moves) {
+function Macro(moves) {
     var position = 0;
 
     this.moves = moves;
@@ -184,10 +184,10 @@ function Preset(moves) {
 }
 
 /**
-  * An object to represent the recording of a preset, with methods to add events
+  * An object to represent the recording of a macro, with methods to add events
   * and calculate the timings of events
   */
-function PresetRecording() {
+function MacroRecording() {
     this.moves = [];
 
     var startTime = null;
@@ -353,8 +353,8 @@ function handleClick(x, y) {
         attractBlobs(blobs, x, y);
     }
 
-    if (presetRecording !== null) {
-        presetRecording.addClick(x, y);
+    if (macroRecording !== null) {
+        macroRecording.addClick(x, y);
     }
 }
 
@@ -450,8 +450,8 @@ function setup() {
 
     blobs = createBlobs(settings.blob.count);
     lfos = {};
-    currentPreset = null;
-    presetRecording = new PresetRecording();
+    currentMacro = null;
+    macroRecording = new macroRecording();
 
     // Modulate blob bearing
     lfos.bearingShift = new LFO(-Math.PI/4, Math.PI/4, 1,
@@ -502,11 +502,11 @@ function mainUpdate(dt) {
             lfos[i].update(dt);
         }
 
-        if (currentPreset !== null) {
-            currentPreset.update(dt);
+        if (currentMacro !== null) {
+            currentMacro.update(dt);
 
-            if (currentPreset.moves.length === 0) {
-                currentPreset = null;
+            if (currentMacro.moves.length === 0) {
+                currentMacro = null;
             }
         }
 
@@ -715,7 +715,7 @@ if (localStorage.getItem("settings")) {
     }
 }
 
-var presets = {
+var macros = {
     "test": [
         {"time": 0, "type": "keydown", "key": "pause"},
         {"time": 0, "type": "keypress", "key": "center"},
@@ -733,8 +733,8 @@ var ctx = canvas.getContext("2d");
 
 var blobs = [];
 var lfos = {};
-var currentPreset = null;
-var presetRecording = null;
+var currentMacro = null;
+var macroRecording = null;
 
 var stopped = true;
 // The DOM element that is currently show, or null if none shown
@@ -819,8 +819,8 @@ window.addEventListener("keydown", function(event) {
     pressedKeys[event.keyCode] = true;
     handleKeypress(event.keyCode);
 
-    if (presetRecording !== null) {
-        presetRecording.addKeyEvent(
+    if (macroRecording !== null) {
+        macroRecording.addKeyEvent(
             getKeyFriendlyName(event.keyCode), "keydown"
         );
     }
@@ -837,8 +837,8 @@ window.addEventListener("keyup", function(event) {
             break;
     }
 
-    if (presetRecording !== null) {
-        presetRecording.addKeyEvent(
+    if (macroRecording !== null) {
+        macroRecording.addKeyEvent(
             getKeyFriendlyName(event.keyCode), "keyup"
         );
     }
