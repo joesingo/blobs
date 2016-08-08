@@ -54,6 +54,10 @@ button {
     outline: none;
     border-color: gray;
 }
+#settings-popup select {
+    font-size: 1.05em;
+    padding: 2px 3px;
+}
 .error {
     border: 1px solid red;
 }

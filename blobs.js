@@ -416,6 +416,10 @@ function handleKeypress(keyCode) {
                 blobs[i].bearing += Math.PI;
             }
             break;
+
+        case KEY_NAMES.startMacro:
+            currentMacro.start();
+            break;
     }
 }
 
@@ -738,7 +742,7 @@ var macros = {
         {"time": 4, "type": "keydown", "key": "center"},
         {"time": 4.1, "type": "keyup", "key": "center"}
     ],
-    "test2": [{"time":0,"type":"keydown","key":"pause"},{"time":0.217,"type":"click","coords":[24.842105263157894,13.28125]},{"time":1.405,"type":"keyup","key":"pause"},{"time":3.689,"type":"click","coords":[37.78947368421053,43.75]}]
+    "test2": [{"time":0,"type":"keydown","key":"pause"},{"time":0.179,"type":"keydown","key":"center"},{"time":0.299,"type":"keyup","key":"center"},{"time":0.558,"type":"keyup","key":"pause"},{"time":0.64,"type":"keydown","key":"randomiseSpeed"},{"time":2.413,"type":"click","coords":[29.57894736842105,28.125]},{"time":7.306,"type":"keyup","key":"randomiseSpeed"}]
 }
 
 // Create canvas and context
@@ -805,25 +809,26 @@ var KEY_NAMES = {
     "toggleSymmetry": 89, // y
     "reverse": 86, // v
     "randomiseSpeed": 81, // q
+    "startMacro": 77, // m
     "esc": 27, // esc
 }
 
 var KEY_HELP_TEXT = {
     "pause":          "Hold to pause all blob movement. Hold and click to " +
                       "move all blobs to the clicked position",
-    "randomise":      "Press to randomise the direction of each blob",
-    "center":         "Press to make all blobs head towards the center of the " +
-                      "screen",
-    "reverse":        "Press to reverse the direction of all blobs",
+    "randomise":      "Randomise the direction of each blob",
+    "center":         "Make all blobs head towards the center of the screen",
+    "reverse":        "Reverse the direction of all blobs",
     "slow":           "Hold to make all blobs travel at a slower speed " +
                       "(defined in the settings)",
     "wavy":           "Hold to make all blobs travel in a wavy line",
     "randomiseSpeed": "Hold to increase/decrease each blob's speed by a " +
                       "random amount",
-    "settings":       "Press to bring up the settings dialog",
-    "toggleClear":    "Press to toggle clearing of the canvas at the " +
-                      "beginning of each frame",
-   "toggleSymmetry":  "Press to toggle symmetry",
+    "startMacro":     "Start the current macro",
+    "settings":       "Bring up the settings dialog",
+    "toggleClear":    "Toggle clearing of the screen at the beginning of " +
+                      "each frame",
+   "toggleSymmetry":  "Toggle symmetry",
     "help":           "Toggle this help",
     "esc":            "Save settings/Close dialog"
 }
