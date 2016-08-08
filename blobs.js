@@ -149,11 +149,21 @@ function LFO(minValue, maxValue, speed, callback, loopRound) {
   */
 function Macro(moves) {
     var position = 0;
+    // The index at which to start iterating through this.moves. This is
+    // increased whenever a move is performed
+    var startIndex;
 
+    this.started = false;
     this.moves = moves;
 
+    this.start = function() {
+        startIndex = 0;
+        position = 0;
+        this.started = true;
+    }
+
     this.update = function(dt) {
-        for (var i in this.moves) {
+        for (var i=startIndex; i<this.moves.length; i++) {
             if (this.moves[i].time < position) {
                 switch (this.moves[i].type) {
                     case "keyup":
@@ -174,7 +184,11 @@ function Macro(moves) {
                         break;
                 }
 
-                this.moves.splice(i, 1);
+                startIndex++;
+
+                if (startIndex === this.moves.length) {
+                    this.started = false;
+                }
             }
         }
 
@@ -440,7 +454,11 @@ function setup() {
 
     blobs = createBlobs(settings.blob.count);
     lfos = {};
-    currentMacro = null;
+
+    // Get the current macro from the dropdown
+    var macroName = document.getElementById("macro-dropdown").value;
+    currentMacro = new Macro(macros[macroName]);
+
     macroRecording = new MacroRecording();
 
     // Modulate blob bearing
@@ -492,12 +510,8 @@ function mainUpdate(dt) {
             lfos[i].update(dt);
         }
 
-        if (currentMacro !== null) {
+        if (currentMacro.started) {
             currentMacro.update(dt);
-
-            if (currentMacro.moves.length === 0) {
-                currentMacro = null;
-            }
         }
 
         // Click at the center of the canvas. This is handled here so that the
@@ -715,13 +729,16 @@ if (localStorage.getItem("settings")) {
 var macros = {
     "test": [
         {"time": 0, "type": "keydown", "key": "pause"},
-        {"time": 0, "type": "keypress", "key": "center"},
+        {"time": 0, "type": "keydown", "key": "center"},
+        {"time": 0.1, "type": "keyup", "key": "center"},
         {"time": 0.1, "type": "keyup", "key": "pause"},
-        {"time": 1, "type": "keypress", "key": "randomise"},
+        {"time": 1, "type": "keydown", "key": "randomise"},
         {"time": 3, "type":"click", "coords": [0, 0]},
-        {"time": 4, "type": "keypress", "key": "toggleClear"},
-        {"time": 4, "type": "keypress", "key": "center"}
-    ]
+        {"time": 4, "type": "keydown", "key": "toggleClear"},
+        {"time": 4, "type": "keydown", "key": "center"},
+        {"time": 4.1, "type": "keyup", "key": "center"}
+    ],
+    "test2": [{"time":0,"type":"keydown","key":"pause"},{"time":0.217,"type":"click","coords":[24.842105263157894,13.28125]},{"time":1.405,"type":"keyup","key":"pause"},{"time":3.689,"type":"click","coords":[37.78947368421053,43.75]}]
 }
 
 // Create canvas and context
@@ -741,6 +758,15 @@ var dialogs = {
     "settings": document.getElementById("settings-popup"),
     "help": document.getElementById("help-popup")
 };
+
+// Create a dropdown for macros
+var macroDropdown = document.getElementById("macro-dropdown");
+for (var i in macros) {
+    var option = document.createElement("option");
+    option.value = i;
+    option.innerHTML = i;
+    macroDropdown.appendChild(option);
+}
 
 // Start main loop
 var then = Date.now();

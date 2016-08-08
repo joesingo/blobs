@@ -4,12 +4,21 @@
 <head>
     <title>Blobs</title>
     <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
 </head>
 
 <body>
     <div class="popup" id="settings-popup">
         <h2>Settings</h2>
         <div class="json" contenteditable="true"></div>
+
+        <h3>Macros</h3>
+        <label>Current macro:
+            <select id="macro-dropdown">
+                <!-- Options are inserted here by JS -->
+            </select>
+        </label>
+
         <div class="buttons">
             <button onclick="saveSettings()">Save</button>
             <button style="float:right" onclick="resetSettings()">Reset</button>
