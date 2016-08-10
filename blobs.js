@@ -692,6 +692,73 @@ function toggleHelp() {
     }
 }
 
+/**
+  * Show the div containing the form to add a new macro
+  */
+function showNewMacroDiv() {
+    // Hide the button
+    document.getElementById("new-macro-button").style.display = "none";
+    // Show the div
+    document.getElementById("new-macro-div").style.display = "block";
+}
+
+function addNewMacro() {
+    var inputs = document.getElementById("new-macro-div")
+                         .getElementsByTagName("input");
+    var name = inputs[0].value.trim();
+    var macroStr = inputs[1].value.trim();
+
+    // Validate name
+    if (name === "") {
+        addClass(inputs[0], "error")
+        var error = true;
+    }
+    else {
+        // Need to remove the error class in case there was an error previously
+        removeClass(inputs[0], "error");
+    }
+
+    // Validate macro is valid JSON
+    try {
+       var macro = JSON.parse(macroStr);
+        // Remove error class in case there were errors previously
+        removeClass(inputs[1], "error");
+    }
+    catch (e) {
+       addClass(inputs[1], "error");
+       console.log("WARNING: Macro was not valid JSON");
+       var error = true;
+    }
+
+    if (error) {
+        return;
+    }
+
+    // Add the macro to the dropdown
+    macros[name] = macro;
+    populateMacroDropdown();
+
+    // Reset and hide the form, and show the 'add' button
+    inputs[0].value = "";
+    inputs[1].value = "";
+    document.getElementById("new-macro-div").style.display = "none";
+    document.getElementById("new-macro-button").style.display = "block";
+}
+
+/**
+  * Populate the macro dropdown in the settings dialog
+  */
+function populateMacroDropdown() {
+    var macroDropdown = document.getElementById("macro-dropdown");
+    macroDropdown.innerHTML = "";  // Clear previous contents
+    for (var i in macros) {
+        var option = document.createElement("option");
+        option.value = i;
+        option.innerHTML = i;
+        macroDropdown.appendChild(option);
+    }
+}
+
 // User customisable settings
 var defaultSettings = {
     "canvas": {
@@ -744,6 +811,7 @@ var macros = {
     ],
     "test2": [{"time":0,"type":"keydown","key":"pause"},{"time":0.179,"type":"keydown","key":"center"},{"time":0.299,"type":"keyup","key":"center"},{"time":0.558,"type":"keyup","key":"pause"},{"time":0.64,"type":"keydown","key":"randomiseSpeed"},{"time":2.413,"type":"click","coords":[29.57894736842105,28.125]},{"time":7.306,"type":"keyup","key":"randomiseSpeed"}]
 }
+populateMacroDropdown();
 
 // Create canvas and context
 var canvas = document.getElementById("main-canvas");
@@ -762,15 +830,6 @@ var dialogs = {
     "settings": document.getElementById("settings-popup"),
     "help": document.getElementById("help-popup")
 };
-
-// Create a dropdown for macros
-var macroDropdown = document.getElementById("macro-dropdown");
-for (var i in macros) {
-    var option = document.createElement("option");
-    option.value = i;
-    option.innerHTML = i;
-    macroDropdown.appendChild(option);
-}
 
 // Start main loop
 var then = Date.now();

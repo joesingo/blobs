@@ -12,12 +12,19 @@
         <h2>Settings</h2>
         <div class="json" contenteditable="true"></div>
 
-        <h3>Macros</h3>
+        <h2>Macros</h2>
         <label>Current macro:
             <select id="macro-dropdown">
                 <!-- Options are inserted here by JS -->
             </select>
         </label>
+        <br />
+        <button onclick="showNewMacroDiv()" id="new-macro-button">Add macro</button>
+        <div id="new-macro-div">
+            <input type="text" placeholder="Name"/>&nbsp;:
+            <input type="text" placeholder="Macro"/>
+            <button onclick="addNewMacro()">Add new macro</button>
+        </div>
 
         <div class="buttons">
             <button onclick="saveSettings()">Save</button>

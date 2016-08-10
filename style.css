@@ -9,6 +9,10 @@ h1, h2, h3 {
 button {
     font-family: inherit;
 }
+input[type=text] {
+    padding: 5px;
+    width: 100px;
+}
 #main-canvas {
     display: block;
     margin: auto;
@@ -32,6 +36,9 @@ button {
 #settings-popup {
     display: none;
 }
+#settings-popup div {
+    margin: 15px auto;
+}
 #settings-popup div.json {
     outline: none;
     font-family: monospace;
@@ -41,7 +48,6 @@ button {
     padding: 0 15px;
 }
 #settings-popup button {
-    font-size: 1.1em;
     padding: 5px 10px;
     background: #eee;
     border: 1px solid black;
@@ -54,9 +60,16 @@ button {
     outline: none;
     border-color: gray;
 }
+#settings-popup .buttons button {
+    font-size: 1.1em;
+}
 #settings-popup select {
     font-size: 1.05em;
     padding: 2px 3px;
+    margin-right: 10px;
+}
+#new-macro-div {
+    display: none;
 }
 .error {
     border: 1px solid red;
