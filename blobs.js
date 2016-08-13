@@ -428,7 +428,7 @@ function handleKeypress(keyCode) {
  *
  * count - The number of blobs to create
  * x (optional) - The x-coordinate to create the blobs at (defaults to using a
- *               random coordinate for each blob)
+ *                random coordinate for each blob)
  * y (optional) - Same as x for y-coordinate
  */
 function createBlobs(count, x, y) {
@@ -453,8 +453,8 @@ function createBlobs(count, x, y) {
  * Set up the canvas, blobs and LFOs
  */
 function setup() {
-    canvas.width = settings.canvas.width;
-    canvas.height = settings.canvas.height;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     blobs = createBlobs(settings.blob.count);
     lfos = {};
@@ -702,6 +702,10 @@ function showNewMacroDiv() {
     document.getElementById("new-macro-div").style.display = "block";
 }
 
+/**
+  * Validate the form for adding a new macro, add the new macro to the 'macros'
+  * object, and clear and hide the form
+  */
 function addNewMacro() {
     var inputs = document.getElementById("new-macro-div")
                          .getElementsByTagName("input");
@@ -762,8 +766,6 @@ function populateMacroDropdown() {
 // User customisable settings
 var defaultSettings = {
     "canvas": {
-        "width": window.innerWidth,
-        "height": window.innerHeight,
         "backgroundColour": "black"
     },
     "blob": {
@@ -776,7 +778,7 @@ var defaultSettings = {
     "clearCanvas": true,
     "symmetry": true,
     "hueChangePerSecond": 30,
-    "version": 1.1  // Increment this when changing the structure of settings
+    "version": 1.2  // Increment this when changing the structure of settings
 };
 var settings = defaultSettings;
 
