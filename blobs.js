@@ -835,7 +835,7 @@ var defaultSettings = {
     "clearCanvas": true,
     "symmetry": true,
     "hueChangePerSecond": 30,
-    "version": 1.2  // Increment this when changing the structure of settings
+    "version": 1.3  // Increment this when changing the structure of settings
 };
 var settings = defaultSettings;
 
