@@ -420,6 +420,12 @@ function handleKeypress(keyCode) {
         case KEY_NAMES.startMacro:
             currentMacro.start();
             break;
+
+        case KEY_NAMES.toggleFullscreen:
+            if (displayedDialog === null) {
+                toggleFullscreen();
+            }
+            break;
     }
 }
 
@@ -453,8 +459,8 @@ function createBlobs(count, x, y) {
  * Set up the canvas, blobs and LFOs
  */
 function setup() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = settings.canvas.width;
+    canvas.height = settings.canvas.height;
 
     blobs = createBlobs(settings.blob.count);
     lfos = {};
@@ -680,6 +686,55 @@ function syntaxHighlightJSON(obj) {
 }
 
 /**
+ * Toogle fullscreen and resize canvas accordingly
+ * shown
+ */
+function toggleFullscreen() {
+    // Unfortunately this is not standardised across browsers and prefixes
+    // must be used. Information taken from
+    // https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API#Prefixing
+
+    if (canvas.fullscreen) {
+        functionNames = [
+            "exitFullscreen",
+            "webkitExitFullscreen",
+            "mozCancelFullscreen",
+            "msExitFullscreen"
+        ]
+
+        for (var i in functionNames) {
+            var name = functionNames[i];
+            if (name in document) {
+                document[name]();
+                canvas.fullscreen = false;
+                canvas.width = settings.canvas.width;
+                canvas.height = settings.canvas.height;
+                break;
+            }
+        }
+    }
+    else {
+        functionNames = [
+            "requestFullscreen",
+            "webkitRequestFullscreen",
+            "mozRequestFullscreen",
+            "msRequestFullscreen"
+        ]
+
+        for (var i in functionNames) {
+            var name = functionNames[i];
+            if (name in canvas) {
+                canvas[name]();
+                canvas.fullscreen = true;
+                canvas.width = window.screen.width;
+                canvas.height = window.screen.height;
+                break;
+            }
+        }
+    }
+}
+
+/**
  * Show the help dialog if it is currently hidden, and close it if it is
  * shown
  */
@@ -766,7 +821,9 @@ function populateMacroDropdown() {
 // User customisable settings
 var defaultSettings = {
     "canvas": {
-        "backgroundColour": "black"
+        "backgroundColour": "black",
+        "width": 800,
+        "height": 600
     },
     "blob": {
         "radius": 3,
@@ -859,39 +916,41 @@ canvas.addEventListener("click", function(event) {
 });
 
 var KEY_NAMES = {
-    "pause": 16, // shift
-    "randomise": 82, // r
-    "center": 67, // c
-    "slow": 83, // s
-    "wavy": 87, // w
-    "settings": 79, // o
-    "toggleClear": 75, // k
-    "help": 72, // h
-    "toggleSymmetry": 89, // y
-    "reverse": 86, // v
-    "randomiseSpeed": 81, // q
-    "startMacro": 77, // m
-    "esc": 27, // esc
+    "pause": 16,            // shift
+    "randomise": 82,        // r
+    "center": 67,           // c
+    "slow": 83,             // s
+    "wavy": 87,             // w
+    "settings": 79,         // o
+    "toggleClear": 75,      // k
+    "toggleFullscreen": 70, // f
+    "help": 72,             // h
+    "toggleSymmetry": 89,   // y
+    "reverse": 86,          // v
+    "randomiseSpeed": 81,   // q
+    "startMacro": 77,       // m
+    "esc": 27,              // esc
 }
 
 var KEY_HELP_TEXT = {
-    "pause":          "Hold to pause all blob movement. Hold and click to " +
-                      "move all blobs to the clicked position",
-    "randomise":      "Randomise the direction of each blob",
-    "center":         "Make all blobs head towards the center of the screen",
-    "reverse":        "Reverse the direction of all blobs",
-    "slow":           "Hold to make all blobs travel at a slower speed " +
-                      "(defined in the settings)",
-    "wavy":           "Hold to make all blobs travel in a wavy line",
-    "randomiseSpeed": "Hold to increase/decrease each blob's speed by a " +
-                      "random amount",
-    "startMacro":     "Start the current macro",
-    "settings":       "Bring up the settings dialog",
-    "toggleClear":    "Toggle clearing of the screen at the beginning of " +
-                      "each frame",
-   "toggleSymmetry":  "Toggle symmetry",
-    "help":           "Toggle this help",
-    "esc":            "Save settings/Close dialog"
+    "pause":           "Hold to pause all blob movement. Hold and click to " +
+                       "move all blobs to the clicked position",
+    "randomise":       "Randomise the direction of each blob",
+    "center":          "Make all blobs head towards the center of the screen",
+    "reverse":         "Reverse the direction of all blobs",
+    "slow":            "Hold to make all blobs travel at a slower speed " +
+                       "(defined in the settings)",
+    "wavy":            "Hold to make all blobs travel in a wavy line",
+    "randomiseSpeed":  "Hold to increase/decrease each blob's speed by a " +
+                       "random amount",
+    "startMacro":      "Start the current macro",
+    "settings":        "Bring up the settings dialog",
+    "toggleClear":     "Toggle clearing of the screen at the beginning of " +
+                       "each frame",
+   "toggleSymmetry":   "Toggle symmetry",
+   "toggleFullscreen": "Toggle fullscreen",
+    "help":            "Toggle this help",
+    "esc":             "Save settings/Close dialog"
 }
 
 // Create a table to show the help text for each keybinding
