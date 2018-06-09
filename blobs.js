@@ -898,7 +898,7 @@ var KEY_HELP_TEXT = {
 var keyTable = document.getElementById("key-table");
 for (var keyName in KEY_HELP_TEXT) {
     var keyCell = document.createElement("td");
-    keyCell.innerHTML = "<span>" + getKeyName(KEY_NAMES[keyName]) + "</span>";
+    keyCell.innerHTML = "<span class='key'>" + getKeyName(KEY_NAMES[keyName]) + "</span>";
 
     var helpCell = document.createElement("td");
     helpCell.innerHTML = KEY_HELP_TEXT[keyName];
@@ -947,3 +947,6 @@ window.addEventListener("keyup", function(event) {
 });
 
 setup();
+
+// Show help on page load
+toggleHelp();
