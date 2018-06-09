@@ -8,45 +8,47 @@
 </head>
 
 <body>
-    <div class="popup" id="settings-popup">
-        <h2>Settings</h2>
-        <div class="json" contenteditable="true" spellcheck="false"></div>
+    <div id="blobs-container">
+        <div class="popup" id="settings-popup">
+            <h2>Settings</h2>
+            <div class="json" contenteditable="true" spellcheck="false"></div>
 
-        <h2>Macros</h2>
-        <label>Current macro:
-            <select id="macro-dropdown">
-                <!-- Options are inserted here by JS -->
-            </select>
-        </label>
-        <br />
-        <button onclick="showNewMacroDiv()" id="new-macro-button">Add macro</button>
-        <div id="new-macro-div">
-            <input type="text" placeholder="Name"/>&nbsp;:
-            <input type="text" placeholder="Macro"/>
-            <button onclick="addNewMacro()">Add new macro</button>
+            <h2>Macros</h2>
+            <label>Current macro:
+                <select id="macro-dropdown">
+                    <!-- Options are inserted here by JS -->
+                </select>
+            </label>
+            <br />
+            <button onclick="showNewMacroDiv()" id="new-macro-button">Add macro</button>
+            <div id="new-macro-div">
+                <input type="text" placeholder="Name"/>&nbsp;:
+                <input type="text" placeholder="Macro"/>
+                <button onclick="addNewMacro()">Add new macro</button>
+            </div>
+
+            <div class="buttons">
+                <button onclick="saveSettings()">Save</button>
+                <button style="float:right" onclick="resetSettings()">Reset</button>
+            </div>
         </div>
 
-        <div class="buttons">
-            <button onclick="saveSettings()">Save</button>
-            <button style="float:right" onclick="resetSettings()">Reset</button>
+        <div class="popup" id="help-popup">
+            <h2>Help</h2>
+            <p>Welcome to blobs!</p>
+            <p>Move the blobs around the screen by clicking or using the keyboard
+            (see the table below)</p>
+            <p>Press <span class="key">O</span> to change settings</p>
+            <p>Press <span class="key">H</span> to close this help</p>
+            <p>Press <span class="key">F</span> to toggle fullscreen</p>
+            <h3>Keybindings</h3>
+            <table id="key-table">
+                <!-- Keybindings are inserted here by JS -->
+            </table>
         </div>
-    </div>
 
-    <div class="popup" id="help-popup">
-        <h2>Help</h2>
-        <p>Welcome to blobs!</p>
-        <p>Move the blobs around the screen by clicking or using the keyboard
-        (see the table below)</p>
-        <p>Press <span class="key">O</span> to change settings</p>
-        <p>Press <span class="key">H</span> to close this help</p>
-        <p>Press <span class="key">F</span> to toggle fullscreen</p>
-        <h3>Keybindings</h3>
-        <table id="key-table">
-            <!-- Keybindings are inserted here by JS -->
-        </table>
+        <canvas id="main-canvas"></canvas>
     </div>
-
-    <canvas id="main-canvas"></canvas>
     <script type="text/javascript" src="blobs.js"></script>
 </body>
 
